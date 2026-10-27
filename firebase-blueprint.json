@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "Book": {
+      "title": "Book",
+      "description": "Library book catalog entry",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "author": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "department": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "shelfNo": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "copiesAvailable": { "type": "integer" },
+        "status": { "type": "string", "enum": ["Available", "Issued"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "author", "subject", "department", "shelfNo", "copiesAvailable", "status"]
+    },
+    "Request": {
+      "title": "Request",
+      "description": "Student book procurement request with department and enrollment number",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "department": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "enrollmentNumber": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "bookTitle": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "author": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "status": { "type": "string", "enum": ["Pending", "Ordered", "Arrived"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["studentName", "department", "enrollmentNumber", "bookTitle", "author", "reason", "status"]
+    },
+    "GalleryPhoto": {
+      "title": "GalleryPhoto",
+      "description": "Library and university campus showcase photos managed by administrators",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 150 },
+        "category": { "type": "string", "enum": ["Library", "Campus", "Study Hall", "Digital Center", "Events"] },
+        "imageUrl": { "type": "string" },
+        "caption": { "type": "string", "maxLength": 300 },
+        "addedAt": { "type": "string" },
+        "addedBy": { "type": "string" }
+      },
+      "required": ["title", "category", "imageUrl"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized administrator mapping",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 3, "maxLength": 150 },
+        "role": { "type": "string", "enum": ["admin", "superadmin"] },
+        "addedAt": { "type": "string" },
+        "addedBy": { "type": "string" }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "/books/{bookId}": {
+      "schema": { "$ref": "#/entities/Book" },
+      "description": "Public catalog of books at Assam down town University Library"
+    },
+    "/requests/{requestId}": {
+      "schema": { "$ref": "#/entities/Request" },
+      "description": "Student book requests collection"
+    },
+    "/gallery/{photoId}": {
+      "schema": { "$ref": "#/entities/GalleryPhoto" },
+      "description": "Library and campus showcase photos"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Admins registry keyed by Firebase Auth UID"
+    }
+  }
+}

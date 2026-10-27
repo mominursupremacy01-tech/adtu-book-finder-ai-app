@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all unknown paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Only authenticated users whose UID exists in the /admins collection are admins
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidBook(data) {
+      return data.keys().hasAll(['title', 'author', 'subject', 'department', 'shelfNo', 'copiesAvailable', 'status'])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.author is string && data.author.size() >= 1 && data.author.size() <= 200
+        && data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 100
+        && data.department is string && data.department.size() >= 1 && data.department.size() <= 100
+        && data.shelfNo is string && data.shelfNo.size() >= 1 && data.shelfNo.size() <= 50
+        && (data.copiesAvailable is int || data.copiesAvailable is number) && data.copiesAvailable >= 0
+        && (data.status == 'Available' || data.status == 'Issued');
+    }
+
+    function isValidRequest(data) {
+      return data.keys().hasAll(['studentName', 'department', 'enrollmentNumber', 'bookTitle', 'author', 'reason', 'status'])
+        && data.studentName is string && data.studentName.size() >= 1 && data.studentName.size() <= 100
+        && data.department is string && data.department.size() >= 1 && data.department.size() <= 100
+        && data.enrollmentNumber is string && data.enrollmentNumber.size() >= 1 && data.enrollmentNumber.size() <= 50
+        && data.bookTitle is string && data.bookTitle.size() >= 1 && data.bookTitle.size() <= 200
+        && data.author is string && data.author.size() >= 1 && data.author.size() <= 200
+        && data.reason is string && data.reason.size() >= 1 && data.reason.size() <= 500
+        && (data.status == 'Pending' || data.status == 'Ordered' || data.status == 'Arrived');
+    }
+
+    function isValidPhoto(data) {
+      return data.keys().hasAll(['title', 'category', 'imageUrl'])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 150
+        && data.category in ['Library', 'Campus', 'Study Hall', 'Digital Center', 'Events']
+        && data.imageUrl is string && data.imageUrl.size() >= 5;
+    }
+
+    // 1. Books collection: Public can read; only admins can create, update, delete
+    match /books/{bookId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidBook(request.resource.data);
+      allow update: if isAdmin() && isValidBook(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 2. Requests collection: Public can submit requests; only admins can view, update, delete
+    match /requests/{requestId} {
+      allow create: if isValidRequest(request.resource.data) && request.resource.data.status == 'Pending';
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 3. Gallery collection: Public can view photos; only admins can add, update, delete
+    match /gallery/{photoId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidPhoto(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 4. Admins collection: Only verified admins can read or write (add/remove admins)
+    match /admins/{adminId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

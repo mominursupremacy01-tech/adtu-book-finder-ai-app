@@ -1,0 +1,6 @@
+{
+  "name": "ADTU BookFinder",
+  "description": "Library book finder and request management system for Assam down town University.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
